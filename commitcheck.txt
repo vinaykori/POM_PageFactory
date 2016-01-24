@@ -1,0 +1,521 @@
+sdsdsdsdDefault constraint
+ 
+When you don't pass the GenderId for insert statements then NULL will be added  under GenderID this is when tblperson doesn't have default constraint
+Insert into tblPerson(ID,Name,Email) values(7,'Sam','s@s.com')  
+The following command will add a default constraint, DF_tblPerson_GenderId.
+ALTER TABLE tblPerson
+ADD CONSTRAINT DF_tblPerson_GenderId
+DEFAULT 1 FOR GenderId
+Insert into tblPerson(ID,Name,Email) values(8,'kori','k@s.com')
+After adding a default constraint then even if don't pass the GenderId for insert statements then system will the default of 1 will be inserted for this record.
+On the other hand, the following insert statement will insert NULL, instead of using the default value since we are explictily passing the null value to GenderId column.
+Insert into tblPerson(ID,Name,Email,GenderId) values (6,'Dan','d@d.com',NULL)
+To drop a constraint
+ALTER TABLE { TABLE_NAME } 
+DROP CONSTRAINT { CONSTRAINT_NAME }
+
+Referential integrity
+Foreign keys are used to enforce database integrity. In layman's terms, A foreign key in one table points to a primary key in another table. The foreign key constraint prevents invalid data from being inserted into the foreign key column. The values that you enter into the foreign key column, has to be one of the values contained in the table it points to.
+
+For examples there is two tables  Assume there in no Referential integrity and when user tries to insert with Invalid genederID system use to allow. 
+Insert into tblPerson(ID,Name,Email,GenderId) values (6,'Dan','d@d.com',99)
+Here 99 is not there in the tblGender table under ID column even though it allows insert data in to tblperson table hence here the data integrity loss. 
+To avoid this we need to define the Referential integrity
+Create Table tblGender
+(ID int Not Null Primary Key,
+Gender nvarchar(50))
+
+Alter table tblPerson 
+add constraint tblPerson_GenderId_FK FOREIGN KEY (GenderId) references tblGender(ID)
+ 
+Now when you try to insert invalid data system will not allow you to insert 
+Insert into tblPerson(ID,Name,Email,GenderId) values (6,'Dan','d@d.com',99)
+FK - This avoids to enter a value in to table with Invalid data, it enters a only a valid data having valid primary key values contained in the table it points to.
+Cascading referential integrity constraint
+Let suppose if we delete the Female record from the tblGender table then the reference pointing to tblPreson table having two records with GenderId 2 (Female) i,e Jade and May. Then these two records become Orphan records.
+In fact the data base will not allows to keep Orphan records, but have a other mechanism as follows.
+However, you have the following options when setting up Cascading referential integrity constraint
+
+ 
+1. No Action: This is the default behaviour. No Action specifies that if an attempt is made to delete or update a row with a key referenced by foreign keys in existing rows in other tables, an error is raised and the DELETE or UPDATE is rolled back.
+
+delete from tblGender where ID=2
+or
+update tblGender set ID=4 where ID=2
+For example, consider the 2 tables shown below. If you delete row with ID = 2 from tblGender table, then row with ID = 1 and 5 from tblPerson table becomes an orphan record. You will not be able to tell the Gender for this row. So, Cascading referential integrity constraint can be used to define actions Microsoft SQL Server should take when this happens. By default, we get an error and the DELETE or UPDATE statement is rolled back.
+
+
+2. Cascade: Specifies that if an attempt is made to delete or update a row with a key referenced by foreign keys in existing rows in other tables, all rows containing those foreign keys are also deleted or updated.
+
+Alter table tblPerson 
+add constraint tblPerson_GenderId_FK FOREIGN KEY (GenderId) references tblGender(ID) on delete cascade
+
+
+
+3. Set NULL: Specifies that if an attempt is made to delete or update a row with a key referenced by foreign keys in existing rows in other tables, all rows containing those foreign keys are set to NULL.  
+Alter table tblPerson 
+add constraint tblPerson_GenderId_FK FOREIGN KEY (GenderId) references tblGender(ID) on delete NULL
+
+
+
+4. Set Default: Specifies that if an attempt is made to delete or update a row with a key referenced by foreign keys in existing rows in other tables, all rows containing those foreign keys are set to default values.
+
+delete from tblGender where ID=2
+ 
+
+CHECK constraint is used to limit the range of the values, that can be entered for a column.
+
+
+Let's say, we have an integer AGE column, in a table. The AGE in general cannot be less than ZERO and at the same time cannot be greater than 150. But, since AGE is an integer column it can accept negative values and values much greater than 150.
+
+
+So, to limit the values, that can be added, we can use CHECK constraint. In SQL Server, CHECK constraint can be created graphically, or using a query.
+
+The following check constraint, limits the age between ZERO and 150.
+ALTER TABLE tblPerson
+ADD CONSTRAINT CK_tblPerson_Age CHECK (Age > 0 AND Age < 150)
+
+
+The general formula for adding check constraint in SQL Server:
+ALTER TABLE { TABLE_NAME }
+ADD CONSTRAINT { CONSTRAINT_NAME } CHECK ( BOOLEAN_EXPRESSION )
+
+
+If the BOOLEAN_EXPRESSION returns true, then the CHECK constraint allows the value, otherwise it doesn't. Since, AGE is a nullable column, it's possible to pass null for this column, when inserting a row. When you pass NULL for the AGE column, the boolean expression evaluates to UNKNOWN, and allows the value.
+If you insert the NULL to the age column it allows the value to insert since the  AGE is a nullable column and for NULL value BOOLEAN_EXPRESSION returns true 
+insert  into tblperson values(5, 'sara','s@s.com',2,NULL)
+ BOOLEAN_EXPRESSION of check constraint returns false when you try to insert Age value more than 150 
+insert  into tblperson values(5, 'sara','s@s.com',2,151)
+insert  into tblperson values(5, 'sara','s@s.com',2,-1)
+
+Identity column
+If a column is marked as an identity column, then the values for this column are automatically generated (Auto Incremented ), when you insert a new row into the table. The following, create table statement marks PersonId as an identity column with seed = 1 and Identity Increment = 1. Seed and Increment values are optional. If you don't specify the identity and seed they both default to 1
+Create Table tblPerson
+(
+PersonId int Identity(1,1) Primary Key,
+Name nvarchar(20)
+)
+
+In the following 2 insert statements, we only supply values for Name column and not for PersonId column. 
+Insert into tblPerson values ('Sam')
+Insert into tblPerson values ('Sara')
+
+If you select all the rows from tblPerson table, you will see that, 'Sam' and 'Sara' rows have got 1 and 2 as PersonId.
+
+Now, if I try to execute the following query, I get an error stating - An explicit value for the identity column in table 'tblPerson' can only be specified when a column list is used and IDENTITY_INSERT is ON. 
+Insert into tblPerson values (1,'Todd')
+
+So if you mark a column as an Identity column, you dont have to explicitly supply a value for that column when you insert a new row. The value is automatically calculated and provided by SQL server. So, to insert a row into tblPerson table, just provide value for Name column.
+Insert into tblPerson values ('Todd')
+
+PersonID	Name
+1	Todd
+2	Sam
+3	Sara
+If i delete the row 1 assume Todd left the company and new joned emp "kori" joined
+Insert into tblPerson values ('kori')
+PersonID	Name
+2	Sam
+3	Sara
+4	Kori
+
+If i want to reuse the identity Coloumn that is Id 1 then you have to set   
+SET Identity_Insert tblPerson ON
+Now try to Insert 
+Insert into tblPerson values (1, 'jhon') -- still you will get an error so when you Identity_Insert is on then we have to use below format. Rememeber when Identity_Insert is turned on then you have to use explicit column and its value while insert as below
+Insert into tblPerson(PersonId, Name) values(1, 'John')
+PersonID	Name
+1	John
+2	Sam
+3	Sara
+4	Kori
+
+
+[ More explanation : Delete the row, that you have just inserted and insert another row. You see that the value for PersonId is 2. Now if you insert another row, PersonId is 3. A record with PersonId = 1, does not exist, and I want to fill this gap. To do this, we should be able to explicitly supply the value for identity column. To explicitly supply a value for identity column
+1. First turn on identity insert - SET Identity_Insert tblPerson ON
+2. In the insert query specify the column list
+    Insert into tblPerson(PersonId, Name) values(2, 'John')
+
+As long as the Identity_Insert is turned on for a table, you need to explicitly provide the value for that column. If you don't provide the value, you get an error - Explicit value must be specified for identity column in table 'tblPerson1' either when IDENTITY_INSERT is set to ON or when a replication user is inserting into a NOT FOR REPLICATION identity column. 
+
+After, you have the gaps in the identity column filled, and if you wish SQL server to calculate the value, turn off Identity_Insert.
+SET Identity_Insert tblPerson OFF
+
+If you have deleted all the rows in a table, and you want to reset the identity column value, use DBCC CHECKIDENT command. This command will reset PersonId identity column.
+DBCC CHECKIDENT(tblPerson, RESEED, 0)
+
+Now if delete all the records from table and Insert new row and check what is the ID
+PersonID	Name
+1	John
+2	Sam
+3	Sara
+4	Kori
+
+delete from tblPerson;
+Insert into tblPerson values (vinay)
+PersonID	Name
+6	vinay
+
+so If i want to use all the ID's deleted once again the we have one more command DBCC (to reset Identity value and start from the begging )
+DBCC CHECKIDENT(tblPerson, RESEED, 0)
+
+Insert into tblPerson values (shilpa)
+PersonID	Name
+1	shilpa
+
+]
+How to get the last generated identity column value
+
+Select SCOPE_IDENTITY()
+Select @@IDENTITY
+Select IDENT_CURRENT('tblPerson')
+SCOPE_IDENTITY() - returns the last identity value that is created in the same session and in the same scope.
+@@IDENTITY - returns the last identity value that is created in the same session and across any scope.
+IDENT_CURRENT('TableName') - returns the last identity value that is created for a specific table across any session and any scope.
+
+MySQL:
+SELECT LAST_INSERT_ID();
+Orcale:
+select *
+
+from  emp
+
+where rowid=(select max(rowid) from emp);
+
+Unique key constraint
+We use UNIQUE constraint to enforce uniqueness of a column i.e the column shouldn't allow any duplicate values.
+To create the unique key using a query:
+Alter Table Table_Name
+Add Constraint Constraint_Name Unique(Column_Name)
+
+Both primary key and unique key are used to enforce, the uniqueness of a column. So, when do you choose one over the other?
+A table can have, only one primary key. If you want to enforce uniqueness on 2 or more columns, then we use unique key constraint.
+
+What is the difference between Primary key constraint and Unique key constraint? This question is asked very frequently in interviews.
+1. A table can have only one primary key, but more than one unique key
+2. Primary key does not allow nulls, where as unique key allows one null.
+Group By - Part 11 
+In SQL Server we have got lot of aggregate functions. Examples
+1. Count()
+2. Sum()
+3. avg()
+4. Min()
+5. Max()
+
+Group by clause is used to group a selected set of rows into a set of summary rows by the values of one or more columns or expressions. It is always used in conjunction with one or more aggregate functions.
+
+ 
+I want an sql query, which gives total salaries paid by City. The output should be as shown below. 
+ 
+
+Query for retrieving total salaries by city: 
+We are applying SUM() aggregate function on Salary column, and grouping by city column. This effectively adds, all salaries of employees with in the same city.
+Select City, SUM(Salary) as TotalSalary 
+from tblEmployee
+Group by City
+
+Note: If you omit, the group by clause and try to execute the query, you get an error - Column 'tblEmployee.City' is invalid in the select list because it is not contained in either an aggregate function or the GROUP BY clause. 
+
+Now, I want an sql query, which gives total salaries by City, by gender. The output should be as shown below.
+
+
+
+ 
+
+Query for retrieving total salaries by city and by gender: It's possible to group by multiple columns. In this query, we are grouping first by city and then by gender. 
+Select City, Gender, SUM(Salary) as TotalSalary
+from tblEmployee
+group by City, Gender
+
+Now, I want an sql query, which gives total salaries and total number of employees by City, and by gender. The output should be as shown below. 
+
+ 
+
+Query for retrieving total salaries and total number of employees by City, and by gender: The only difference here is that, we are using Count() aggregate function.
+Select City, Gender, SUM(Salary) as TotalSalary, 
+COUNT(ID) as TotalEmployees
+from tblEmployee
+group by City, Gender
+
+Filtering Groups:
+WHERE clause is used to filter rows before aggregation, where as HAVING clause is used to filter groups after aggregations. The following 2 queries produce the same result.
+
+Filtering rows using WHERE clause, before aggrgations take place:
+Select City, SUM(Salary) as TotalSalary
+from tblEmployee
+Where City = 'London'
+group by City
+
+Filtering groups using HAVING clause, after all aggrgations take place:
+Select City, SUM(Salary) as TotalSalary
+from tblEmployee
+group by City
+Having City = 'London'
+
+From a performance standpoint, you cannot say that one method is less efficient than the other. Sql server optimizer analyzes each statement and selects an efficient way of executing it. As a best practice, use the syntax that clearly describes the desired result. Try to eliminate rows that 
+you wouldn't need, as early as possible.
+
+It is also possible to combine WHERE and HAVING
+Select City, SUM(Salary) as TotalSalary
+from tblEmployee
+Where Gender = 'Male'
+group by City
+Having City = 'London'
+
+Difference between WHERE and HAVING clause:
+1. WHERE clause can be used with - Select, Insert, and Update statements, where as HAVING clause can only be used with the Select statement.
+2. WHERE filters rows before aggregation (GROUPING), where as, HAVING filters groups, after the aggregations are performed.
+3. Aggregate functions cannot be used in the WHERE clause, unless it is in a sub query contained in a HAVING clause, whereas, aggregate functions can be used in Having clause.
+
+Joins
+Joins in SQL server are used to query (retrieve) data from 2 or more related tables. In general tables are related to each other using foreign key constraints.
+In SQL server, there are different types of JOINS.
+1. CROSS JOIN
+2. INNER JOIN 
+3. OUTER JOIN 
+
+Outer Joins are again divided into 3 types
+1. Left Join or Left Outer Join
+2. Right Join or Right Outer Join
+3. Full Join or Full Outer Join
+Now let's understand all the JOIN types, with examples and the differences between them. 
+Employee Table (tblEmployee)
+ 
+
+Departments Table (tblDepartment)
+ 
+SQL Script to create tblEmployee and tblDepartment tables
+Create table tblDepartment
+(
+     ID int primary key,
+     DepartmentName nvarchar(50),
+     Location nvarchar(50),
+     DepartmentHead nvarchar(50)
+)
+Go
+
+Insert into tblDepartment values (1, 'IT', 'London', 'Rick')
+Insert into tblDepartment values (2, 'Payroll', 'Delhi', 'Ron')
+Insert into tblDepartment values (3, 'HR', 'New York', 'Christie')
+Insert into tblDepartment values (4, 'Other Department', 'Sydney', 'Cindrella')
+Go
+
+Create table tblEmployee
+(
+     ID int primary key,
+     Name nvarchar(50),
+     Gender nvarchar(50),
+     Salary int,
+     DepartmentId int foreign key references tblDepartment(Id)
+)
+Go
+
+Insert into tblEmployee values (1, 'Tom', 'Male', 4000, 1)
+Insert into tblEmployee values (2, 'Pam', 'Female', 3000, 3)
+Insert into tblEmployee values (3, 'John', 'Male', 3500, 1)
+Insert into tblEmployee values (4, 'Sam', 'Male', 4500, 2)
+Insert into tblEmployee values (5, 'Todd', 'Male', 2800, 2)
+Insert into tblEmployee values (6, 'Ben', 'Male', 7000, 1)
+Insert into tblEmployee values (7, 'Sara', 'Female', 4800, 3)
+Insert into tblEmployee values (8, 'Valarie', 'Female', 5500, 1)
+Insert into tblEmployee values (9, 'James', 'Male', 6500, NULL)
+Insert into tblEmployee values (10, 'Russell', 'Male', 8800, NULL)
+Go
+
+General Formula for Joins
+SELECT      ColumnList
+FROM           LeftTableName
+JOIN_TYPE  RightTableName
+ON                 JoinCondition
+
+CROSS JOIN
+CROSS JOIN, produces the cartesian product of the 2 tables involved in the join. For example, in the Employees table we have 10 rows and in the Departments table we have 4 rows. So, a cross join between these 2 tables produces 40 rows. Cross Join shouldn't have ON clause. 
+
+CROSS JOIN Query:
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployee
+CROSS JOIN tblDepartment
+JOIN or INNER JOIN
+Write a query, to retrieve Name, Gender, Salary and DepartmentName from Employees and Departments table. The output of the query should be as shown below. 
+ 
+
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployee
+INNER JOIN tblDepartment
+ON tblEmployee.DepartmentId = tblDepartment.Id
+
+OR
+
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployee
+JOIN tblDepartment
+ON tblEmployee.DepartmentId = tblDepartment.Id
+
+Note: JOIN or INNER JOIN means the same. It's always better to use INNER JOIN, as this explicitly specifies your intention.
+
+If you look at the output, we got only 8 rows, but in the Employees table, we have 10 rows. We didn't get JAMES and RUSSELL records. This is because the DEPARTMENTID, in Employees table is NULL for these two employees and doesn't match with ID column in Departments table.
+
+So, in summary, INNER JOIN, returns only the matching rows between both the tables. Non matching rows are eliminated.
+
+
+RIGHT JOIN or RIGHT OUTER JOIN 
+I want, all the rows from the right table. The query output should be, as shown below. 
+ 
+
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployee
+RIGHT OUTER JOIN tblDepartment
+ON tblEmployee.DepartmentId = tblDepartment.Id
+
+OR
+
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployee
+RIGHT JOIN tblDepartment
+ON tblEmployee.DepartmentId = tblDepartment.Id
+
+Note: You can use, RIGHT JOIN or RIGHT OUTER JOIN. OUTER keyowrd is optional
+
+RIGHT JOIN, returns all the matching rows + non matching rows from the right table.
+FULL JOIN or FULL OUTER JOIN
+I want all the rows from both the tables involved in the join. The query output should be, as shown below. 
+ 
+
+
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployee
+FULL OUTER JOIN tblDepartment
+ON tblEmployee.DepartmentId = tblDepartment.Id
+
+OR
+
+SELECT Name, Gender, Salary, DepartmentName
+FROM tblEmployee
+FULL JOIN tblDepartment
+ON tblEmployee.DepartmentId = tblDepartment.Id
+
+Note: You can use, FULLJOIN or FULL OUTER JOIN. OUTER keyowrd is optional
+
+FULL JOIN, returns all rows from both the left and right tables, including the non matching rows.
+
+Joins Summary
+ 
+
+ 
+
+Advanced Joins
+Considers Employees (tblEmployee) and Departments (tblDepartment) tables 
+
+Employee Table (tblEmployee)
+ 
+
+Departments Table (tblDepartment)
+ 
+
+How to retrieve only the non matching rows from the left table. The output should be as shown below: 
+ 
+
+Query:
+SELECT       Name, Gender, Salary, DepartmentName
+FROM           tblEmployee E
+LEFT JOIN   tblDepartment D
+ON                 E.DepartmentId = D.Id
+WHERE        D.Id IS NULL
+
+ 
+
+How to retrieve only the non matching rows from the right table 
+ 
+
+Query:
+SELECT         Name, Gender, Salary, DepartmentName
+FROM             tblEmployee E
+RIGHT JOIN    tblDepartment D
+ON                   E.DepartmentId = D.Id
+WHERE          E.DepartmentId IS NULL 
+
+ 
+
+How to retrieve only the non matching rows from both the left and right table. Matching rows should be eliminated. 
+ 
+
+Query:
+SELECT         Name, Gender, Salary, DepartmentName
+FROM              tblEmployee E
+FULL JOIN      tblDepartment D
+ON                   E.DepartmentId = D.Id
+WHERE          E.DepartmentId IS NULL
+OR                   D.Id IS NULL
+
+ 
+
+Self join 
+Consider tblEmployees table shown below. 
+ 
+
+Write a query which gives the following result. 
+ 
+
+
+Self Join Query: 
+A MANAGER is also an EMPLOYEE. Both the, EMPLOYEE and MANAGER rows, are present in the same table. Here we are joining tblEmployee with itself using different alias names, E for Employee and M for Manager. We are using LEFT JOIN, to get the rows with ManagerId NULL. You can see in the output TODD's record is also retrieved, but the MANAGER is NULL. If you replace LEFT JOIN with INNER JOIN, you will not get TODD's record.
+Select E.Name as Employee, M.Name as Manager
+from tblEmployee E
+Left Join tblEmployee M
+On E.ManagerId = M.EmployeeId
+
+
+In short, joining a table with itself is called as SELF JOIN. SELF JOIN is not a different type of JOIN. It can be classified under any type of JOIN - INNER, OUTER or CROSS Joins. The above query is, LEFT OUTER SELF Join.
+
+Inner Self Join tblEmployee table:
+Select E.Name as Employee, M.Name as Manager
+from tblEmployee E
+Inner Join tblEmployee M
+On E.ManagerId = M.EmployeeId
+
+Cross Self Join tblEmployee table:
+Select E.Name as Employee, M.Name as Manager
+from tblEmployee
+Cross Join tblEmployee
+
+Different ways to replace NULL
+Consider the Employees table below. 
+ 
+
+In Part 14, we have learnt writing a LEFT OUTER SELF JOIN query, which produced the following output. 
+ 
+
+
+In the output, MANAGER column, for Todd's rows is NULL. I want to replace the NULL value, with 'No Manager'
+
+Replacing NULL value using ISNULL() function: We are passing 2 parameters to IsNULL() function. If M.Name returns NULL, then 'No Manager' string is used as the replacement value.
+SELECT E.Name as Employee, ISNULL(M.Name,'No Manager') as Manager
+FROM tblEmployee E
+LEFT JOIN tblEmployee M
+ON E.ManagerID = M.EmployeeID
+
+Replacing NULL value using CASE Statement:
+SELECT E.Name as Employee, CASE WHEN M.Name IS NULL THEN 'No Manager' 
+   ELSE M.Name END as Manager
+FROM  tblEmployee E
+LEFT JOIN tblEmployee M
+ON   E.ManagerID = M.EmployeeID
+
+Replacing NULL value using COALESCE() function: COALESCE() function, returns the first NON NULL value.
+SELECT E.Name as Employee, COALESCE(M.Name, 'No Manager') as Manager
+FROM tblEmployee E
+LEFT JOIN tblEmployee M
+ON E.ManagerID = M.EmployeeID
+
+What is the difference between inner and outer join? Explain with example.
+Inner Join
+Inner join is the most common type of Join which is used to combine the rows from two tables and create a result set containing only such records that are present in both the tables based on the joining condition (predicate). 
+Inner join returns rows when there is at least one match in both tables 
+If none of the record matches between two tables, then INNER JOIN will return a NULL set. Below is an example of INNER JOIN and the resulting set. 
+SELECT dept.name DEPARTMENT, emp.name EMPLOYEE 
+FROM DEPT dept, EMPLOYEE emp
+WHERE emp.dept_id = dept.id
+
+
+
+sssssssss
