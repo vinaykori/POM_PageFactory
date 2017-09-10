@@ -1,0 +1,13 @@
+ 	
+
+
+Review requirements, specifications and technical design documents to provide timely and meaningful feedback.
+Experience with web application testing, Proficient in Black Box testing, Integration Testing, Regression Testing, System Testing and User Acceptance Testing (UAT).
+Create detailed, comprehensive and well-structured test plans and test cases
+Perform thorough regression testing when bugs are resolved.
+Expertise in Problem solving and Tracking Bug Reports using Bug tracking Tools.
+SQL knowledge and experience in Analyze Log files.
+Creating and Provide detailed test reports and metrics.
+Maintain excellent communication and relationship with various stake holders of the project.
+Fully understand business implications of on-going projects and take pro-active steps to ensure business objectives are not affected due to project challenges.
+Supporting analysis of test results and resolution of open issues.
